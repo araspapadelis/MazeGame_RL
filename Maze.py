@@ -5,7 +5,7 @@ from plot_utils import ImagePlot
 class MazeGame:
     def __init__(self, plot = False):
         self.maze =  np.array([  
-                                1,1,0,1,0,1,0,0,0,0,1,1,1,
+                                1,1,0,1,0,1,0,0,0,0,4,1,1,
                                 0,1,1,1,0,1,0,0,1,0,0,0,1,
                                 0,0,0,1,0,1,1,1,1,1,1,1,1,
                                 0,1,1,1,1,1,0,0,1,0,0,0,1,
@@ -15,7 +15,7 @@ class MazeGame:
                                 0,1,0,1,0,0,1,0,1,0,0,1,0,
                                 0,1,1,0,1,1,1,1,1,1,1,1,0,
                                 0,0,1,0,0,1,0,1,0,1,0,1,0,
-                                1,1,1,1,0,1,1,0,1,1,0,1,2,        
+                                5,1,1,1,0,1,1,0,1,1,0,1,2,        
                                 ])
                         
 
@@ -28,6 +28,32 @@ class MazeGame:
         self.moveVec = [-self.nCols, self.nCols, 1, -1]        
         self.possibleActions = 4
         self.nStates = self.maze.shape[0]
+        self.playerColor = 3
+        self.goals = {4:False, 2: False, 5: False}
+        self.goals = {4:False, 2: False}
+        self.goals = {2: False}
+        
+        self.debug=False
+    def checkGoal(self):
+        key = self.maze[self.pos]
+        if key in self.goals:
+            self.goals[key] = True
+            print("Found ")
+            return True            
+        else:
+            return False
+    def checkGoal2(self):
+        maze_val = self.maze[self.pos]
+            
+        for i,key in enumerate(self.goals.keys()):
+            if key != maze_val:
+                if self.goals[key] == True:
+                    continue
+                else:
+                    return False
+            else:
+                self.goals[key] = True                                
+                return True            
 
     def getOpenRoads(self):
         ret = np.array([False, False, False, False])
@@ -49,21 +75,29 @@ class MazeGame:
                 ret[3] = True
         return ret
 
-    def win(self):
-        return self.maze[self.pos]==2
+    def win(self):        
+        self.checkGoal2()        
+        allTrue = True if False not in self.goals.values() else False
+        return allTrue
     
     def plot(self, episode = 0, stepnumber = 0):
         if self.game_plot.active:
            mask = np.zeros_like(self.maze)
-           mask[self.pos] = 3           
+           mask[self.pos] = self.playerColor          
            step = int(np.round(stepnumber/10.)*10)
-           self.game_plot.window_title=f"Episode {episode} Steps: {step}"
-           self.game_plot.imshow((self.maze+mask).reshape(self.nRows,self.nCols))
+           self.game_plot.window_title=f"Episode {episode} Steps: {step}"           
+           self.game_plot.imshow(np.maximum(self.maze,mask).reshape(self.nRows,self.nCols))
            time.sleep(0.01)
     def getState(self):
         return self.pos
-    def move(self, action):
-        self.pos += (self.getOpenRoads()*self.moveVec)[action]
-        return self.pos
-    def restart(self):
+    def step(self, action):
+        self.pos += (self.getOpenRoads()*self.moveVec)[action]                
+        self.checkGoal2()    
+        tmp = np.array(list(self.goals.values()))
+        r = tmp[tmp==True].shape[0]/tmp.shape[0]
+        return self.pos, r
+    def reset(self):
         self.pos = self.startpos
+        for key in self.goals.keys():
+            self.goals[key] = False
+            
