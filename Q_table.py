@@ -35,7 +35,7 @@ for i in range(num_episodes):
         n+=1
         state = game.getState()
         action = np.argmax(Q[state,:] + np.random.randn(1,game.possibleActions)*(1./(i+1)))     
-        newstate, r = game.step(action)
+        newstate, r, _ = game.step(action)
         #Update Q-Table with new knowledge        
         Q[state,action] = Q[state,action] + lr*(r + y*np.max(Q[newstate,:]) - Q[state,action])        
     nsteps.append(n)

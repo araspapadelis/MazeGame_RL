@@ -27,6 +27,7 @@ class MazeGame:
         self.pos = self.startpos
         self.moveVec = [-self.nCols, self.nCols, 1, -1]        
         self.possibleActions = 4
+        self.action_space = np.arange(0,self.possibleActions)
         self.nStates = self.maze.shape[0]
         self.playerColor = 3
         self.goals = {4:False, 2: False, 5: False}
@@ -34,6 +35,13 @@ class MazeGame:
         self.goals = {2: False}
         
         self.debug=False
+    
+    def size(self):
+            return self.maze.shape[0]
+        
+    def randomAction(self):
+        return np.random.choice(self.action_space)
+    
     def checkGoal(self):
         key = self.maze[self.pos]
         if key in self.goals:
@@ -94,8 +102,9 @@ class MazeGame:
         self.pos += (self.getOpenRoads()*self.moveVec)[action]                
         self.checkGoal2()    
         tmp = np.array(list(self.goals.values()))
-        r = tmp[tmp==True].shape[0]/tmp.shape[0]
-        return self.pos, r
+        #r = tmp[tmp==True].shape[0]/tmp.shape[0]
+        r = 1 if self.win() else 0
+        return self.pos, r, False
     def reset(self):
         self.pos = self.startpos
         for key in self.goals.keys():
